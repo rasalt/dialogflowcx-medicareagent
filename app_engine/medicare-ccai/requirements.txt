@@ -1,0 +1,10 @@
+Flask
+wtforms
+google-api-python-client
+google-auth-httplib2
+google-auth
+google-cloud
+google-cloud-bigquery
+
+gunicorn==20.0.4; python_version > '3.0'
+gunicorn==19.10.0; python_version < '3.0'

@@ -1,0 +1,43 @@
+[
+    {
+        "name": "doctors",
+        "type": "STRING",
+        "mode": "REPEATED"
+    },
+    {
+        "name": "practices",
+        "type": "STRING",
+        "mode": "REPEATED"
+    },
+    {
+        "name": "membername",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "fields": []
+    },
+    {
+        "name": "hospitalsadmitted",
+        "type": "STRING",
+        "mode": "REPEATED"
+    },
+    {
+        "name": "alcoholfrequency",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    },
+    {
+        "name": "tobaccoproducts",
+        "type": "STRING",
+        "mode": "REPEATED"
+    },
+    {
+        "name": "alcoholproblem",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    },
+    {
+        "name": "pcp_aware",
+        "type": "BOOLEAN",
+        "mode": "REQUIRED"
+    }
+]

@@ -1,0 +1,167 @@
+# Copyright 2015 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# [START gae_flex_storage_app]
+import logging
+import os
+
+from flask import Flask, jsonify, request
+
+#from google.cloud import storage
+#google-api-python-client
+
+#from google.auth import app_engine
+#from google.auth.transport import requests
+#from google.oauth2 import service_account
+app = Flask(__name__)
+
+
+# Configure this environment variable via app.yaml
+#CLOUD_STORAGE_BUCKET = os.environ['CLOUD_STORAGE_BUCKET']
+#from model import InputForm
+import sys
+import json
+import google.cloud 
+from google.cloud import bigquery
+
+# [START healthcare_get_session]
+
+def get_session():
+    """Creates an authorized Requests Session."""
+
+    # Explicitly use App Engine credentials. These credentials are
+    # only available when running on App Engine Standard.
+    credentials = app_engine.Credentials()
+
+    # Explicitly use Compute Engine credentials. These credentials are
+    # available on Compute Engine, App Engine Flexible, and Container Engine.
+    session = requests.AuthorizedSession(credentials)
+
+    return session
+
+def get_resource(
+    base_url,
+    project_id,
+    cloud_region,
+    dataset_id,
+    fhir_store_id,
+    resource_type,
+    resource_id,
+):
+    """Gets a FHIR resource."""
+    url = "{}/projects/{}/locations/{}".format(base_url, project_id, cloud_region)
+
+    resource_path = "{}/datasets/{}/fhirStores/{}/fhir/{}/{}".format(
+        url, dataset_id, fhir_store_id, resource_type, resource_id
+    )
+
+    # Make an authenticated API request
+    session = get_session()
+
+    headers = {"Content-Type": "application/fhir+json;charset=utf-8"}
+    print("url is :{}".format(resource_path))
+    response = session.get(resource_path, headers=headers)
+    response.raise_for_status()
+
+    resource = response.json()
+
+    print("Got {} resource:".format(resource["resourceType"]))
+    print(json.dumps(resource, indent=2))
+
+    return resource
+
+base_url = os.environ['BASE_URL']
+project_id = os.environ['PROJECT_ID']
+cloud_region = os.environ['REGION']
+#dataset_id = os.environ['DATASET_ID']
+#fhir_store_id = os.environ['FHIR_STORE_ID']
+
+
+def queryHCapi(resource_id, resource_type):
+    print("PatientId {}".format( resource_id ))
+    print("ResourceType {}".format(resource_type))
+    resource  = get_resource(
+      base_url,
+      project_id,
+      cloud_region,
+      dataset_id,
+      fhir_store_id,
+      resource_type,
+      resource_id)
+    return resource
+
+
+@app.errorhandler(500)
+def server_error(e):
+    logging.exception('An error occurred during a request.')
+    return """
+    An internal error occurred: <pre>{}</pre>
+    See logs for full stacktrace.
+    """.format(e), 500
+
+#http://10.1.1.1:5000/login?username=alex&password=pw1
+#Row(('0', '81fc5cdf-7a61-43fe-8f61-5eb21a480174', 'Bunny174', 'Sauer652', '328 Howell Crossroad', 'Kingston', 'Massachusetts', '02364', datetime.date(1972, 8, 12), 'NULL'), {'id': 0, 'fhirid': 1, 'name': 2, 'familyname': 3, 'addressline': 4, 'addresscity': 5, 'addressstate': 6, 'addresspostalcode': 7, 'dob': 8, 'email': 9})
+
+def getDialogflowParams(req):
+    param = req.get("queryResult")
+    dfparam = param.get("parameters")
+    print("************")
+    print(dfparam)
+    print("************")
+    return dfparam
+
+def getDialogflowIntent(req):
+    param = req.get("queryResult").get("intent")
+    intent = param.get("displayName")
+    print("************")
+    print(intent)
+    print("************")
+    return intent
+
+def customerlookup(req, intent, params):
+    lastname = params.get("any")
+    dob = params.get("date")
+
+    client = bigquery.Client()
+    query_job = client.query(
+      """
+       SELECT * FROM `ccai-med.data.customer`
+       WHERE familyname="{}" AND dob="{}" LIMIT 1""".format(lastname,dob)
+    )
+    results = query_job.result()  # Waits for job to complete. 
+    for row in results:
+       print(row.id, row.name, row.familyname, row.addressline, row.addresscity, row.addressstate, row.addresspostalcode, row.dob, row.email)
+       records = [dict(row)]
+       json_obj = json.dumps(str(records))
+       print(json_obj)
+
+    return json_obj
+
+
+@app.route("/", methods=['GET', 'POST'])
+def webhook():
+    req = json.loads(request.args.get('data'))
+    
+    params = getDialogflowParams(req)
+    intent = getDialogflowIntent(req)
+
+    if (intent == "Default-Welcome - yes - yes-lookup"): 
+        val = customerlookup(req, intent, params)
+  
+    return val 
+
+if __name__ == '__main__':
+    # This is used when running locally. Gunicorn is used to run the
+    # application on Google App Engine. See entrypoint in app.yaml.
+    app.run(host='127.0.0.1', port=8080, debug=True)

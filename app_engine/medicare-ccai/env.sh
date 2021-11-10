@@ -1,0 +1,15 @@
+#export GOOGLE_CLOUD_PROJECT=smede-276406
+#export PUBSUB_VERIFICATION_TOKEN=abc123xyz
+#export PUBSUB_TOPIC=nlppubsub
+#export GOOGLE_APPLICATION_CREDENTIALS=/Users/rkharwar/github/python-docs-samples/appengine/standard_python37/pubsubpublishlocal/smede-276406-dc74236ea17a.json
+#export CLOUD_STORAGE_BUCKET=smede-chatbotdocrepo
+export BASE_URL='https://healthcare.googleapis.com/v1'
+export PROJECT_ID='ccai-med'
+export REGION=us-central1
+export DATASET_ID=temp
+export FHIR_STORE_ID=t
+export GOOGLE_APPLICATION_CREDENTIALS="/Users/rkharwar/github/python-docs-samples/appengine/standard/medccai/ccai-med-4ef0132444c1.json"
+export SPANNER_INSTANCE_ID="ccai-med"
+export SPANNER_DB_ID="ccai-med-db"
+export TWILIO_ACCOUNT_SID='ACfdf8d50e4fd2371cc9f17db70ad04d4b'
+export TWILIO_AUTH_TOKEN='3b4bb3e71b887b14fc71d98bc2033381'
